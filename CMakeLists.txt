@@ -495,7 +495,7 @@ add_library(libraw::libraw ALIAS raw)
 
 target_include_directories(raw
         PUBLIC
-            $<INSTALL_INTERFACE:libraw>
+            $<INSTALL_INTERFACE:include>
             $<BUILD_INTERFACE:${LIBRAW_PATH}>)
 
 TARGET_LINK_LIBRARIES(raw ${MATH_LIBRARY})
@@ -560,7 +560,7 @@ ENDIF()
 TARGET_LINK_LIBRARIES(raw_r ${MATH_LIBRARY})
 target_include_directories(raw_r
         PUBLIC
-        $<INSTALL_INTERFACE:libraw>
+        $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${LIBRAW_PATH}>)
 
 IF(MINGW)
@@ -597,18 +597,46 @@ SET_TARGET_PROPERTIES(raw_r PROPERTIES OUTPUT_NAME "raw_r")
 
 # -- Files to install -------------------------------------------------------------------------------------
 if (LIBRAW_INSTALL)
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+    # Install Shared binary files.
+    install(TARGETS raw raw_r
+            EXPORT LibRawTargets
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            RUNTIME DESTINATION bin
+            INCLUDES DESTINATION include
+            )
+    
+    write_basic_package_version_file(
+            LibRawConfigVersion.cmake
+            VERSION ${PACKAGE_VERSION}
+            COMPATIBILITY AnyNewerVersion
+    )
 
-# Configure and install data file for packaging.
-IF(NOT WIN32)
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/data/libraw.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libraw.pc @ONLY)
-    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libraw.pc DESTINATION lib${LIB_SUFFIX}/pkgconfig)
+    install(EXPORT LibRawTargets
+            FILE LibRawTargets.cmake
+            NAMESPACE LibRaw::
+            DESTINATION lib/cmake/LibRaw
+            )
 
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/data/libraw_r.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libraw_r.pc @ONLY)
-    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libraw_r.pc DESTINATION lib${LIB_SUFFIX}/pkgconfig)
-
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/data/libraw.lsm.cmake ${CMAKE_CURRENT_BINARY_DIR}/libraw.lsm)
-ENDIF()
-
+    configure_file(LibRawConfig.cmake.in LibRawConfig.cmake @ONLY)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LibRawConfig.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/LibRawConfigVersion.cmake"
+            DESTINATION lib/cmake/LibRaw
+            )
+#
+## Configure and install data file for packaging.
+#IF(NOT WIN32)
+#    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/data/libraw.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libraw.pc @ONLY)
+#    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libraw.pc DESTINATION lib${LIB_SUFFIX}/pkgconfig)
+#
+#    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/data/libraw_r.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libraw_r.pc @ONLY)
+#    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libraw_r.pc DESTINATION lib${LIB_SUFFIX}/pkgconfig)
+#
+#    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/data/libraw.lsm.cmake ${CMAKE_CURRENT_BINARY_DIR}/libraw.lsm)
+#ENDIF()
+#
 # Install Shared header files.
 INSTALL(FILES       ${LIBRAW_PATH}/libraw/libraw.h
                     ${LIBRAW_PATH}/libraw/libraw_alloc.h
@@ -621,34 +649,17 @@ INSTALL(FILES       ${LIBRAW_PATH}/libraw/libraw.h
         DESTINATION include/libraw
         COMPONENT   Devel
        )
-
-# Install Shared binary files.
-INSTALL(TARGETS raw
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX}
-       )
-
-INSTALL(TARGETS raw_r
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib${LIB_SUFFIX}
-        ARCHIVE DESTINATION lib${LIB_SUFFIX}
-       )
-
-# Install find cmake script to the system for client applications.
-INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/FindLibRaw.cmake
-        DESTINATION ${INSTALL_CMAKE_MODULE_PATH})
-
+#
 # Install doc data files.
-IF(NOT WIN32)
-    INSTALL(FILES       ${LIBRAW_PATH}/COPYRIGHT
-                        ${LIBRAW_PATH}/LICENSE.CDDL
-                        ${LIBRAW_PATH}/LICENSE.LGPL
-                        ${LIBRAW_PATH}/Changelog.txt
-            DESTINATION share/libraw
-            COMPONENT main
-           )
-ENDIF()
+    IF (NOT WIN32)
+        INSTALL(FILES ${LIBRAW_PATH}/COPYRIGHT
+                ${LIBRAW_PATH}/LICENSE.CDDL
+                ${LIBRAW_PATH}/LICENSE.LGPL
+                ${LIBRAW_PATH}/Changelog.txt
+                DESTINATION share/libraw
+                COMPONENT main
+                )
+    ENDIF ()
 endif(LIBRAW_INSTALL)
 
 # Uninstall rules
