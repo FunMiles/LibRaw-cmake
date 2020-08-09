@@ -11,3 +11,9 @@ find_dependency(JPEG)
 
 # Add the targets file
 include( "${CMAKE_CURRENT_LIST_DIR}/LibRawTargets.cmake" )
+
+# Create an alias libraw::libraw. Because of libraw::raw is imported,
+# an interface library with dependency on it is created and the alias is to that library.
+add_library(libraw_raw INTERFACE)
+target_link_libraries(libraw_raw INTERFACE libraw::raw)
+add_library(libraw::libraw ALIAS libraw_raw)

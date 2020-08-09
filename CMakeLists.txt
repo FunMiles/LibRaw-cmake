@@ -636,7 +636,7 @@ if (LIBRAW_INSTALL)
 
     install(EXPORT LibRawTargets
             FILE LibRawTargets.cmake
-            NAMESPACE LibRaw::
+            NAMESPACE libraw::
             DESTINATION lib/cmake/LibRaw
             )
 
